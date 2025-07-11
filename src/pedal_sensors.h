@@ -8,6 +8,7 @@
 #define GAS_SENSOR_PIN 0 //TODO
 
 void setup_pedals();
+void read_pedals_task(void* pvParameters);
 
 enum class PEDAL_STATE // just a bool for now, but lets us get fancy later
 {
@@ -33,5 +34,5 @@ protected:
 };
 
 //TODO: these globals are kind of ugly--alternate implementation?
-static PedalSensor brake_pedal;
-static PedalSensor gas_pedal;
+static PedalSensor brake_pedal{BRAKE_SENSOR_PIN};
+static PedalSensor gas_pedal{GAS_SENSOR_PIN};

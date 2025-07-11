@@ -26,7 +26,7 @@ void setup_pedals()
             NULL);           // Task handle. Not used here
 }
 
-void read_pedals_task(void *pvParameters)
+void read_pedals_task(void* pvParameters)
 {
     while(1)
     {
