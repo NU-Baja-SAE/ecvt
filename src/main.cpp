@@ -5,6 +5,7 @@
 #include "pins.h"
 #include "pid.h"
 #include "pulseCounter.h"
+#include "pedal_sensors.h"
 
 
 void setup() {
@@ -19,6 +20,9 @@ void setup() {
   Serial.println("setup hall finished");
   setup_potentiometer();
   Serial.println("setup potentiometer finished");
+
+  setup_pedals();
+  Serial.println("setup pedal sensors finish");
 
   setup_pid_task();
   Serial.println("setup pid finished");  

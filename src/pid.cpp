@@ -5,6 +5,7 @@
 #include "pid.h"
 #include <ESP32Encoder.h>
 #include "pulseCounter.h"
+#include "pedal_sensors.h"
 
 // SECTION: Engine RPM Constants
 // #define IDLE_RPM 500
@@ -12,13 +13,15 @@
 // #define SETPOINT_RPM 800
 #define IDLE_RPM 1900
 #define MAX_RPM 3800
-#define TARGET_RPM 3000
-
+#define OPTIMAL_RPM 3000
 
 #define MAX_SHEAVE_SETPOINT 220 
 #define IDLE_SHEAVE_SETPOINT -90
 #define LOW_SHEAVE_SETPOINT -65
 #define LOW_MAX_SETPOINT 50
+
+#define BRAKE_CHANGE_THRESHOLD 0.1 //TODO: how much of a change in one cycle should be treated as slamming the brakes
+#define BRAKE_RESET_THRESHOLD 0.5 //TODO: value above which the brakes should not be considered slammed anymore, even if we haven't reached low gear
 
 // SECTION: Global Variables
 int _vel_setpoint = 0;
@@ -71,7 +74,6 @@ float smoothmax(float a, float b, float k)
 
 void pid_loop_task(void *pvParameters)
 {
-
     float result = 0;
     float integral = 0;
 
@@ -90,17 +92,43 @@ void pid_loop_task(void *pvParameters)
 
     int filter_index_rpm = 0;
 
+    float last_brake_percent = brake_pedal.get_value();
+    float brake_percent = brake_pedal.get_value();
+
+    PEDAL_STATE brakes_state = PEDAL_STATE::NORMAL;
+
     while (1)
     {
         float rpm = get_engine_rpm();
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
 
-        // int targetRPM = map(analogRead(36), 0, 4095, 500, 1200);
-        setpoint = calculate_setpoint(rpm, setpoint);
-        // setpoint = map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT);
-        // Serial.printf(">manualSetpoint: %d\n", map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT));
+        brake_percent = brake_pedal.get_value();
+        
+        if (brake_percent - last_brake_percent > BRAKE_CHANGE_THRESHOLD) // if we've slammed on the brakes, switch to that mode
+        {
+            brakes_state = PEDAL_STATE::SLAMMED;
+        }
+
+        if (brakes_state == PEDAL_STATE::SLAMMED) // slammed brakes means straight to low gear
+        {
+            setpoint = LOW_SHEAVE_SETPOINT;
+        } 
+        else
+        {
+            // int targetRPM = map(analogRead(36), 0, 4095, 500, 1200);
+            setpoint = calculate_setpoint(rpm, setpoint);
+            // setpoint = map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT);
+            // Serial.printf(">manualSetpoint: %d\n", map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT));
+        }
 
         int pos = encoder.getCount();
+
+        if(brakes_state == PEDAL_STATE::SLAMMED && (pos < LOW_MAX_SETPOINT || brake_percent > BRAKE_RESET_THRESHOLD)) // if we've reached low gear or backed off the brake, switch back to regular mode
+        {
+            brakes_state = PEDAL_STATE::NORMAL;
+        }
+
+        last_brake_percent = brake_percent; // update brake percent
 
         float error = setpoint - pos; // calculate the error
 
@@ -147,7 +175,7 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     // }
     else // P controller for RPM setpoint
     {
-        float rpmError = TARGET_RPM - rpm; // positive error means the rpm is too low
+        float rpmError = OPTIMAL_RPM - rpm; // positive error means the rpm is too low
         
         float d_error = last_Error - rpmError; // Derivative error
 
