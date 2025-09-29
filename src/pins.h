@@ -4,6 +4,7 @@
 #define HALL_OUTPUT_PIN 33 // reads each time the hall sensor passes a magnet
 #define ENCODER_A 27
 #define ENCODER_B 14
+#define WHEEL_HALL_PIN 34 // wheel speed hall sensor
 
 // not used yet, input values as necessary 
 // #define potPinTwo //measures across whole potentiometer resistor

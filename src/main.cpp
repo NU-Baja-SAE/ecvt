@@ -5,6 +5,7 @@
 #include "pins.h"
 #include "pid.h"
 #include "pulseCounter.h"
+#include "wheel_rpm.h"
 
 
 void setup() {
@@ -26,14 +27,29 @@ void setup() {
   init_pulse_counter();
   Serial.println("setup hall pulse counter finished");
 
+  setup_wheel_rpm();
+  Serial.println("setup wheel rpm finished");
+
   Serial.println("Setup Complete");
 
 }
 
 void loop() {
+  static unsigned long last_wheel_update = 0;
+  static unsigned long wheel_update_interval = 500; // 500ms intervals
+
+  unsigned long current_time = millis();
+
+  // Only update wheel RPM during longer idle periods
+  if (current_time - last_wheel_update >= wheel_update_interval) {
+    float wheel_rpm = get_wheel_rpm();
+    if (wheel_rpm >= 0) {
+      Serial.printf(">wheel_rpm: %.1f\n", wheel_rpm);
+    }
+    last_wheel_update = current_time;
+  }
 
   delay(100);
-
 }
 
 // put function definitions here:
