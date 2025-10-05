@@ -12,27 +12,30 @@ void setup() {
   Serial.begin(115200);
   
 
-  //configure whether pins will be sending or receiving data
-  setup_motor();
-  Serial.println("setup motor finished");
-  setup_hall();
-  Serial.println("setup hall finished");
-  setup_potentiometer();
-  Serial.println("setup potentiometer finished");
+  // //configure whether pins will be sending or receiving data
+  // setup_motor();
+  // Serial.println("setup motor finished");
+  // setup_hall();
+  // Serial.println("setup hall finished");
+  // setup_potentiometer();
+  // Serial.println("setup potentiometer finished");
 
-  setup_pid_task();
-  Serial.println("setup pid finished");  
+  // setup_pid_task();
+  // Serial.println("setup pid finished");  
   
   init_pulse_counter();
   Serial.println("setup hall pulse counter finished");
 
-  Serial.println("Setup Complete");
+  
+
+  // Serial.println("Setup Complete");
 
 }
 
 void loop() {
 
-  delay(100);
+  Serial.printf("counts: %d\n", get_primary_counter());
+  delay(250);
 
 }
 
