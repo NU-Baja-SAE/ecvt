@@ -132,7 +132,7 @@ void pid_loop_task(void *pvParameters)
         Serial.printf(">rpm: %f\n", rpm);
         // Serial.printf(">targetRPM: %d\n", targetRPM);
 
-        // Serial.printf(">count: %d\n", get_pulse_counter());
+        // Serial.printf(">count: %d\n", get_primary_counter());
         // Serial.printf(">deltaCount: %f\n", deltaCount);
         // Serial.printf(">deltaT: %f\n", deltaT);
         static int counter = 0;
