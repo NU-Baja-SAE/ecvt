@@ -1,42 +1,46 @@
 #include "pulseCounter.h"
-#include <esp32_pcnt.h>
+#include <driver/pcnt.h>
 #include "pins.h"
+#include <Arduino.h>
 
-// create counter object
-PulseCounter pc0;
+pcnt_config_t pcnt_config;
 
+//pins and unit for primary hall sensor
+pcnt_unit_t primary_counter_id = PCNT_UNIT_1;
+int PCNT_INPUT_SIG_IO = PCNT_PIN_NOT_USED;
+int PCNT_INPUT_CTRL_IO = HALL_OUTPUT_PIN;
+
+
+// initialize the primary pulse counter
 void init_pulse_counter()
 {
-    pcnt_isr_service_install(0);
-    // setup hardware pulse counters
-    // initialise counter unit 0, channel 0 with signal input GPIO pin and control signal input pin (0 = no control signal input)
-    pc0.initialise(HALL_OUTPUT_PIN, PCNT_PIN_NOT_USED);
-
-    // count up on negative edges, don't count on positive edges
-    pc0.set_mode(PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
-
-    // set glich filter to ignore pulses less than 1000 x 2.5ns
-    pc0.set_filter_value(1000);
-
-    // clear and restart the counter
-    pc0.clear();
-    pc0.resume();
+    // configure counter for primary
+    pcnt_config.unit = primary_counter_id;
+    pcnt_config.channel = PCNT_CHANNEL_0; // only use channel 0 of each counter unit.
+    // Set signal and control inputGPIOs
+    pcnt_config.pulse_gpio_num = PCNT_INPUT_SIG_IO;
+    pcnt_config.ctrl_gpio_num = PCNT_INPUT_CTRL_IO;
+    pcnt_unit_config(&pcnt_config);
 }
 
-int get_pulse_counter()
+// get the current count of the primary pulse counter
+int get_primary_counter()
 {
-    return pc0.get_value();
+    int16_t pulse_count;
+    pcnt_get_counter_value(primary_counter_id, &pulse_count);
+    return pulse_count;
 }
 
+// calculate engine RPM from primary pulse counter
 float get_engine_rpm()
 {
     static u_int64_t lastTime = micros();
-    static u_int64_t lastCount = get_pulse_counter();
+    static u_int64_t lastCount = get_primary_counter();
     static float rpm = 0;
-    
+
     // Engine RPM calculation
     u_int64_t currentTime = micros();
-    u_int64_t currentCount = get_pulse_counter();
+    u_int64_t currentCount = get_primary_counter();
     float deltaT = (currentTime - lastTime) / 1000000.0;
     if (deltaT > 0.05)
     {
