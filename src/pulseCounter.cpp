@@ -5,10 +5,10 @@
 
 pcnt_config_t pcnt_config;
 
-//pins and unit for primary hall sensor
-pcnt_unit_t primary_counter_id = PCNT_UNIT_1;
-int PCNT_INPUT_SIG_IO = PCNT_PIN_NOT_USED;
-int PCNT_INPUT_CTRL_IO = HALL_OUTPUT_PIN;
+// pins and unit for primary hall sensor
+pcnt_unit_t primary_counter_id = PCNT_UNIT_0;
+int PCNT_INPUT_SIG_IO = HALL_OUTPUT_PIN;
+int PCNT_INPUT_CTRL_IO = PCNT_PIN_NOT_USED;
 
 
 // initialize the primary pulse counter
@@ -21,6 +21,17 @@ void init_pulse_counter()
     pcnt_config.pulse_gpio_num = PCNT_INPUT_SIG_IO;
     pcnt_config.ctrl_gpio_num = PCNT_INPUT_CTRL_IO;
     pcnt_unit_config(&pcnt_config);
+
+    // set counting mode for primary counter, count both rising and falling edges
+    pcnt_set_mode(primary_counter_id, PCNT_CHANNEL_0, PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
+
+    // set filter value to ignore glitches, this is in units of APB clock cycles, so for 80MHz clock, 1000 = 12.5us
+    pcnt_set_filter_value(primary_counter_id, 1000); 
+    pcnt_filter_enable(primary_counter_id);
+
+    // clear and start the counter
+    pcnt_counter_clear(primary_counter_id);
+    pcnt_counter_resume(primary_counter_id);
 }
 
 // get the current count of the primary pulse counter
