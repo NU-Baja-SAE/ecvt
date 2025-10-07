@@ -12,10 +12,10 @@ void init_pulse_counter()
     // initialise counter unit 0, channel 0 with signal input GPIO pin and control signal input pin (0 = no control signal input)
     pc0.initialise(HALL_OUTPUT_PIN, PCNT_PIN_NOT_USED);
 
-    // count up on negative edges, don't count on positive edges
+    // count up on both edges
     pc0.set_mode(PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
 
-    // set glich filter to ignore pulses less than 1000 x 2.5ns
+    // set glitch filter to ignore pulses less than 1000 x 2.5ns
     pc0.set_filter_value(1000);
 
     // clear and restart the counter
