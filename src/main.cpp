@@ -35,9 +35,7 @@ void setup() {
 }
 
 void loop() {
-
   delay(100);
-
 }
 
 // put function definitions here:
