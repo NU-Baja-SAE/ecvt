@@ -5,6 +5,7 @@
 #include "pid.h"
 #include <ESP32Encoder.h>
 #include "pulseCounter.h"
+#include "wheelSpeed.h"
 
 // SECTION: Engine RPM Constants
 // #define IDLE_RPM 500
@@ -101,6 +102,8 @@ void pid_loop_task(void *pvParameters)
         float rpm = get_engine_rpm();
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
 
+        float wheel_speed = get_wheel_speed();
+
         // int targetRPM = map(analogRead(36), 0, 4095, 500, 1200);
         setpoint = calculate_setpoint(rpm, setpoint);
         // setpoint = map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT);
@@ -140,7 +143,7 @@ void pid_loop_task(void *pvParameters)
         if (counter >= 100) // every 100 loops (about every 100 ms)
         {
             counter = 0;
-            SerialUART1.printf("%d, %d\n", (int)rpm, (int)pos);
+            SerialUART1.printf("%d, %d, %d\n", (int)rpm, (int)pos, (int)wheel_speed);
         }
         delay(1);
     }

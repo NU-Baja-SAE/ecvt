@@ -1,30 +1,42 @@
 #include "wheelSpeed.h"
-#include <esp32_pcnt.h>
+#include <driver/pcnt.h>
 #include "pins.h"
+#include <Arduino.h>
 
-// create counter object
-PulseCounter pc1;
+pcnt_config_t wheel_pcnt_config;
+
+// pins and unit for wheel hall sensor
+pcnt_unit_t wheel_counter_id = PCNT_UNIT_1;
+int WHEEL_PCNT_INPUT_SIG_IO = WHEEL_HALL_PIN;
+int WHEEL_PCNT_INPUT_CTRL_IO = PCNT_PIN_NOT_USED;
 
 void init_wheel_speed()
 {
-    // setup hardware pulse counter
-    // initialise counter unit 1, channel 0 with signal input GPIO pin and control signal input pin (0 = no control signal input)
-    pc1.initialise(WHEEL_HALL_PIN, PCNT_PIN_NOT_USED);
+    // configure counter for wheel
+    wheel_pcnt_config.unit = wheel_counter_id;
+    wheel_pcnt_config.channel = PCNT_CHANNEL_0;
+    // Set signal and control input GPIOs
+    wheel_pcnt_config.pulse_gpio_num = WHEEL_PCNT_INPUT_SIG_IO;
+    wheel_pcnt_config.ctrl_gpio_num = WHEEL_PCNT_INPUT_CTRL_IO;
+    pcnt_unit_config(&wheel_pcnt_config);
 
-    // count up on both edges
-    pc1.set_mode(PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
+    // set counting mode for wheel counter, count both rising and falling edges
+    pcnt_set_mode(wheel_counter_id, PCNT_CHANNEL_0, PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
 
-    // set glitch filter to ignore pulses less than 1000 x 2.5ns
-    pc1.set_filter_value(1000);
+    // set filter value to ignore glitches, this is in units of APB clock cycles, so for 80MHz clock, 1000 = 12.5us
+    pcnt_set_filter_value(wheel_counter_id, 1000);
+    pcnt_filter_enable(wheel_counter_id);
 
-    // clear and restart the counter
-    pc1.clear();
-    pc1.resume();
+    // clear and start the counter
+    pcnt_counter_clear(wheel_counter_id);
+    pcnt_counter_resume(wheel_counter_id);
 }
 
 int get_wheel_pulse_counter()
 {
-    return pc1.get_value();
+    int16_t pulse_count;
+    pcnt_get_counter_value(wheel_counter_id, &pulse_count);
+    return pulse_count;
 }
 
 float get_wheel_speed()
