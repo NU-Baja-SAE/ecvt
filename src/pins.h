@@ -6,6 +6,9 @@
 #define ENCODER_A 27
 #define ENCODER_B 14
 
+#define DEBUG_RX 16 // UART RX for debugging
+#define DEBUG_TX 17 // UART TX for debugging
+
 // not used yet, input values as necessary 
 // #define potPinTwo //measures across whole potentiometer resistor
 // #define potPowerPin  //powers potentiometer

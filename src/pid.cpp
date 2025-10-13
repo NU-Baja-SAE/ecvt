@@ -24,6 +24,9 @@
 int _vel_setpoint = 0;
 ESP32Encoder encoder;
 
+// setup serial uart on pin 16 and 17
+HardwareSerial SerialUART1(1); // Use UART1 for UART data logging
+
 // SECTION: Function Prototypes
 void pid_loop_task(void *pvParameters);
 float calculate_setpoint(float rpm, float sheave_setpoint);
@@ -40,6 +43,9 @@ void setup_pid_task()
     // 1361 = -176
 
     encoder.setCount(pos);
+
+
+    SerialUART1.begin(115200, SERIAL_8N1, DEBUG_RX, DEBUG_TX);
 
     xTaskCreate(pid_loop_task,   // Function to implement the task
                 "pid_loop_task", // A name just for humans
@@ -126,9 +132,16 @@ void pid_loop_task(void *pvParameters)
         Serial.printf(">rpm: %f\n", rpm);
         // Serial.printf(">targetRPM: %d\n", targetRPM);
 
-        // Serial.printf(">count: %d\n", get_pulse_counter());
+        // Serial.printf(">count: %d\n", get_primary_counter());
         // Serial.printf(">deltaCount: %f\n", deltaCount);
         // Serial.printf(">deltaT: %f\n", deltaT);
+        static int counter = 0;
+        counter++;
+        if (counter >= 100) // every 100 loops (about every 100 ms)
+        {
+            counter = 0;
+            SerialUART1.printf("%d, %d\n", (int)rpm, (int)pos);
+        }
         delay(1);
     }
 }
