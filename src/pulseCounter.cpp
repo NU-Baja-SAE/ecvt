@@ -3,11 +3,11 @@
 #include "pins.h"
 #include <Arduino.h>
 
-pcnt_config_t pcnt_config;
+pcnt_config_t primary_pcnt_config;
 
 // pins and unit for primary hall sensor
 pcnt_unit_t primary_counter_id = PCNT_UNIT_0;
-int PCNT_INPUT_SIG_IO = HALL_OUTPUT_PIN;
+int PCNT_INPUT_SIG_IO = PRIMARY_HALL_PIN;
 int PCNT_INPUT_CTRL_IO = PCNT_PIN_NOT_USED;
 
 
@@ -15,12 +15,12 @@ int PCNT_INPUT_CTRL_IO = PCNT_PIN_NOT_USED;
 void init_pulse_counter()
 {
     // configure counter for primary
-    pcnt_config.unit = primary_counter_id;
-    pcnt_config.channel = PCNT_CHANNEL_0; // only use channel 0 of each counter unit.
+    primary_pcnt_config.unit = primary_counter_id;
+    primary_pcnt_config.channel = PCNT_CHANNEL_0; // only use channel 0 of each counter unit.
     // Set signal and control inputGPIOs
-    pcnt_config.pulse_gpio_num = PCNT_INPUT_SIG_IO;
-    pcnt_config.ctrl_gpio_num = PCNT_INPUT_CTRL_IO;
-    pcnt_unit_config(&pcnt_config);
+    primary_pcnt_config.pulse_gpio_num = PCNT_INPUT_SIG_IO;
+    primary_pcnt_config.ctrl_gpio_num = PCNT_INPUT_CTRL_IO;
+    pcnt_unit_config(&primary_pcnt_config);
 
     // set counting mode for primary counter, count both rising and falling edges
     pcnt_set_mode(primary_counter_id, PCNT_CHANNEL_0, PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
