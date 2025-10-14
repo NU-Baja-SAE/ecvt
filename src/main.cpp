@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "motor.h"
-#include "hall_sensor.h"
 #include "potentiometer.h"
 #include "pins.h"
 #include "pid.h"
@@ -16,8 +15,7 @@ void setup() {
   //configure whether pins will be sending or receiving data
   setup_motor();
   Serial.println("setup motor finished");
-  setup_hall();
-  Serial.println("setup hall finished");
+  
   setup_potentiometer();
   Serial.println("setup potentiometer finished");
 
