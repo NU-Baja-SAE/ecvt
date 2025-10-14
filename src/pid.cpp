@@ -29,8 +29,10 @@ HardwareSerial SerialUART1(1); // Use UART1 for UART data logging
 
 // SECTION: Function Prototypes
 void pid_loop_task(void *pvParameters);
-float calculate_setpoint(float rpm, float sheave_setpoint);
+float calculate_setpoint(float primary_rpm, float secondary_rpm, float sheave_setpoint);
 float moving_average(float newVal, float *arr, int n, int *index);
+float gear_ratio_from_secondary_rpm(float x);
+float sheave_setpoint_from_gear_ratio(float x);
 
 // sets up a freertos task for the pid loop
 void setup_pid_task()
@@ -101,7 +103,7 @@ void pid_loop_task(void *pvParameters)
         float rpm = get_engine_rpm();
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
 
-        setpoint = calculate_setpoint(rpm, setpoint);
+        setpoint = calculate_setpoint(rpm, 0, setpoint);
 
         int pos = encoder.getCount();
 
@@ -139,10 +141,40 @@ void pid_loop_task(void *pvParameters)
 float calculate_setpoint(float primary_rpm, float secondary_rpm, float sheave_setpoint)
 {
     // rpm -> gear ratio
+    float gear_ratio = gear_ratio_from_secondary_rpm(secondary_rpm);
     
 
     // gear ration -> sheave setpoint
+
 }
+
+
+#define LOW_GEAR 3.6
+#define HIGH_GEAR 0.9 
+#define SLIP_SPEED 1800 / LOW_GEAR // RPM of the secondary at which the clutch starts to slip
+#define CRUISE_LOW 3000 / LOW_GEAR // RPM of the secondary at which we start to shift
+#define CRUISE_HIGH 3000 / HIGH_GEAR // RPM of the secondary at which we finish shifting
+
+float gear_ratio_from_secondary_rpm(float x){
+    if (x < SLIP_SPEED)
+        return LOW_GEAR; // maybe somewhere between LOW and IDLE
+    else if (x < CRUISE_LOW)
+        return LOW_GEAR;
+    else if (x < CRUISE_HIGH)
+        return (LOW_GEAR - HIGH_GEAR) / (CRUISE_LOW - CRUISE_HIGH) * (x - CRUISE_LOW) + LOW_GEAR;
+    else
+        return HIGH_GEAR;
+}
+
+float sheave_setpoint_from_gear_ratio(float x){
+    if (x > LOW_GEAR)
+        return LOW_SHEAVE_SETPOINT; // maybe somewhere between LOW and IDLE
+    else if (x > HIGH_GEAR)
+        return (LOW_SHEAVE_SETPOINT - MAX_SHEAVE_SETPOINT) / (LOW_GEAR - HIGH_GEAR) * (x - LOW_GEAR) + LOW_SHEAVE_SETPOINT;
+    else
+        return MAX_SHEAVE_SETPOINT;
+}
+
 
 // moving average filter
 // newVal is the new value to add to the array
