@@ -6,12 +6,13 @@
 pcnt_config_t wheel_pcnt_config;
 
 // pins and unit for wheel hall sensor
-pcnt_unit_t wheel_counter_id = PCNT_UNIT_1;
+pcnt_unit_t wheel_counter_id = PCNT_UNIT_2;
 int WHEEL_PCNT_INPUT_SIG_IO = WHEEL_HALL_PIN;
 int WHEEL_PCNT_INPUT_CTRL_IO = PCNT_PIN_NOT_USED;
 
 void init_wheel_speed()
 {
+    
     // configure counter for wheel
     wheel_pcnt_config.unit = wheel_counter_id;
     wheel_pcnt_config.channel = PCNT_CHANNEL_0;
@@ -30,6 +31,9 @@ void init_wheel_speed()
     // clear and start the counter
     pcnt_counter_clear(wheel_counter_id);
     pcnt_counter_resume(wheel_counter_id);
+    
+    gpio_pullup_en((gpio_num_t)WHEEL_HALL_PIN); // enable pulldown on hall sensor pin to avoid false triggering
+
 }
 
 int get_wheel_pulse_counter()
@@ -52,7 +56,6 @@ float get_wheel_speed()
     if (deltaT > 0.05)
     {
         uint64_t deltaCount = currentCount - lastCount;
-        Serial.printf(">wheelDeltaCount: %d\n", deltaCount);
         speed = 60.0 * deltaCount / (deltaT * 4.0); // 4 magnets per revolution
 
         lastTime = currentTime;
