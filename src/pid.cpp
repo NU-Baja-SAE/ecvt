@@ -5,6 +5,7 @@
 #include "pid.h"
 #include <ESP32Encoder.h>
 #include "pulseCounter.h"
+#include "wheelSpeed.h"
 
 // SECTION: Engine RPM Constants
 // #define IDLE_RPM 500
@@ -99,7 +100,10 @@ void pid_loop_task(void *pvParameters)
     while (1)
     {
         float rpm = get_engine_rpm();
+        float secondary_rpm = get_secondary_rpm();
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
+
+        float wheel_speed = get_wheel_speed();
 
         // int targetRPM = map(analogRead(36), 0, 4095, 500, 1200);
         setpoint = calculate_setpoint(rpm, setpoint);
@@ -122,25 +126,27 @@ void pid_loop_task(void *pvParameters)
 
         set_direction_speed((int)result); // set the motor speed based on the pid term
 
-        Serial.printf(">pos: %d\n", pos);
-        Serial.printf(">pos_setpoint: %f\n", setpoint);
-        Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
-                                                                       : result);
-        // Serial.printf(">analog: %d\n", analogRead(POT_PIN));
-        // Serial.printf(">derivative: %f\n", derivative * POS_Kd);
-        // Serial.printf(">integral: %f\n", integral * POS_Ki);
-        Serial.printf(">rpm: %f\n", rpm);
+        // Serial.printf(">pos: %d\n", pos);
+        // Serial.printf(">pos_setpoint: %f\n", setpoint);
+        // Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
+        //                                                                : result);
+
+        // Serial.printf(">rpm: %f\n", rpm);
         // Serial.printf(">targetRPM: %d\n", targetRPM);
 
-        // Serial.printf(">count: %d\n", get_primary_counter());
-        // Serial.printf(">deltaCount: %f\n", deltaCount);
-        // Serial.printf(">deltaT: %f\n", deltaT);
+        // Serial.printf("%d, %d, %f, %f\n", (int)rpm, (int)pos, wheel_speed, secondary_rpm);
+        //print these so teleplot can read them
+        Serial.printf(">rpm: %d\n", (int)rpm);
+        Serial.printf(">pos: %d\n", (int)pos);
+        Serial.printf(">wheel_speed: %f\n", wheel_speed);
+        Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
+
         static int counter = 0;
         counter++;
         if (counter >= 100) // every 100 loops (about every 100 ms)
         {
             counter = 0;
-            SerialUART1.printf("%d, %d\n", (int)rpm, (int)pos);
+            SerialUART1.printf("%d, %d, %d\n", (int)rpm, (int)pos, (int)wheel_speed);
         }
         delay(1);
     }

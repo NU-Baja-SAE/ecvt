@@ -4,6 +4,7 @@
 #include "pins.h"
 #include "pid.h"
 #include "pulseCounter.h"
+#include "wheelSpeed.h"
 
 
 void setup() {
@@ -23,6 +24,9 @@ void setup() {
   
   init_pulse_counter();
   Serial.println("setup hall pulse counter finished");
+
+  init_wheel_speed();
+  Serial.println("setup wheel speed counter finished");
 
   Serial.println("Setup Complete");
 
