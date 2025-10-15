@@ -16,6 +16,7 @@ float setpoint_error; // the error between the target setpoint and the current
 float motor_speed; // the value to set the motor speed based on the setpoint 
 
 // Mode read will read the value from the mode control and update the mode as well as update the target 
+// TODO: should this function return a bool, or be void and update the global state?
 bool mode_read()
 {
     // 

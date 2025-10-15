@@ -1,5 +1,7 @@
 #include "pedal_sensors.h"
 
+static void* brake_timer_id; //TODO: is this right??
+
 PedalSensor::PedalSensor(uint8_t pin) 
     : _pin{pin}
 {
@@ -7,37 +9,40 @@ PedalSensor::PedalSensor(uint8_t pin)
 
 void PedalSensor::read_value()
 {
-    _value = analogRead(_pin); //TODO: Presumably we should scale this
+     float val = clamp(1.0 - (analogRead(_pin) - BRAKE_LOW) / (BRAKE_HIGH - BRAKE_LOW), 0.0, 1.0);
+     _buffer[_buffer_idx] = val;
+    _buffer_idx = _buffer_idx == 0 ? BUFFER_SIZE : _buffer_idx - 1;
+#ifdef PEDAL_DEBUG_ACTIVE
+    Serial.printf(">brake: %f\n", val);
+#endif
 }
 
 void setup_pedals()
 {
     brake_pedal = PedalSensor{BRAKE_SENSOR_PIN};
-    gas_pedal = PedalSensor{GAS_SENSOR_PIN};
+    // gas_pedal = PedalSensor{GAS_SENSOR_PIN};
 
     pinMode(BRAKE_SENSOR_PIN, INPUT);
-    pinMode(GAS_SENSOR_PIN, INPUT);
+    // pinMode(GAS_SENSOR_PIN, INPUT);
 
-    xTaskCreate(read_pedals_task,   // Function to implement the task
-            "read_pedals_task", // A name just for humans
-            1000,            // This stack size can be checked & adjusted by reading the Stack Highwater
-            NULL,            // Parameters to pass to the task
-            1,               // This priority can be adjusted
-            NULL);           // Task handle. Not used here
+    xTimerCreate("brake_timer",
+                 pdMS_TO_TICKS(BRAKE_TIMER_RATE),
+                 pdTRUE,
+                 brake_timer_id,
+                 brakeTimerCallback
+    );      
 }
 
-void read_pedals_task(void* pvParameters)
-{
-    while(1)
-    {
-        brake_pedal.read_value();
-        gas_pedal.read_value();
+// INVARIANT: idx must be less than BUFFER_SIZE
+float PedalSensor::get_value(uint8_t idx=0) {
+    return _buffer[(_buffer_idx + idx) % BUFFER_SIZE];
+}
 
-#ifdef PEDAL_DEBUG_ACTIVE
-        Serial.printf(">brake: %.3f\n", brake_pedal.get_value());
-        Serial.printf(">gas: %.3f\n", gas_pedal.get_value());
-#endif
+// INVARIANT: ticks must be less than BUFFER_SIZE
+float PedalSensor::get_change(uint8_t ticks) {
+    return get_value(ticks) - get_value(0);
+}
 
-        delay(1);
-    }
+void brakeTimerCallback(TimerHandle_t xTimer) {
+    brake_pedal.read_value();
 }

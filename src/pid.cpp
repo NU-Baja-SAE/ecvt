@@ -21,8 +21,15 @@
 #define LOW_SHEAVE_SETPOINT -65
 #define LOW_MAX_SETPOINT 50
 
-#define BRAKE_CHANGE_THRESHOLD 0.1 //TODO: how much of a change in one cycle should be treated as slamming the brakes
-#define BRAKE_RESET_THRESHOLD 0.5 //TODO: value above which the brakes should not be considered slammed anymore, even if we haven't reached low gear
+//TODO: tune these
+#define BRAKE_SLAM_TICKS 10 // ms, the change must happen in this many ticks
+#define BRAKE_SLAM_THRESHOLD 0.5 // below this threshold, we never slam
+#define BRAKE_SLAM_CHANGE 0.2 // change that must occur within time
+#define BRAKE_RESET_THRESHOLD 0.4 // value below which the brakes should not be considered slammed anymore, even if we haven't reached low gear
+/* since there are a lot of things here, just to clarify: 
+if the brakes change by SLAM_CHANGE within SLAM_TICKS ticks, and the new value
+is below SLAM_THRESHOLD, we stay in slam mode until we reach low gear or the brakes go
+above RESET_THRESHOLD*/
 
 // SECTION: Global Variables
 int _vel_setpoint = 0;
@@ -62,10 +69,6 @@ void setup_pid_task()
 #define ALPHA 0.8
 #define D_ALPHA 0.8
 
-#define clamp(x, min, max) (x < min ? min : x > max ? max \
-                                                    : x)
-#define lerp(a, b, k) (a + (b - a) * k)
-
 float smoothmin(float a, float b, float k)
 {
     float h = clamp(0.5 + 0.5 * (a - b) / k, 0, 1);
@@ -99,9 +102,6 @@ void pid_loop_task(void *pvParameters)
 
     int filter_index_rpm = 0;
 
-    float last_brake_percent = brake_pedal.get_value();
-    float brake_percent = brake_pedal.get_value();
-
     PEDAL_STATE brakes_state = PEDAL_STATE::NORMAL;
 
     while (1)
@@ -109,10 +109,9 @@ void pid_loop_task(void *pvParameters)
         float rpm = get_engine_rpm();
         float secondary_rpm = get_secondary_rpm();
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
-
-        brake_percent = brake_pedal.get_value();
         
-        if (brake_percent - last_brake_percent > BRAKE_CHANGE_THRESHOLD) // if we've slammed on the brakes, switch to that mode
+        // TODO: Should brake slam or manual mode take precedence?
+        if ((brake_pedal.get_change(BRAKE_SLAM_TICKS) > BRAKE_SLAM_CHANGE) && brake_pedal.get_value(0) > BRAKE_SLAM_THRESHOLD) // if we've slammed on the brakes, switch to that mode
         {
             brakes_state = PEDAL_STATE::SLAMMED;
         }
@@ -132,12 +131,10 @@ void pid_loop_task(void *pvParameters)
 
         int pos = encoder.getCount();
 
-        if(brakes_state == PEDAL_STATE::SLAMMED && (pos < LOW_MAX_SETPOINT || brake_percent > BRAKE_RESET_THRESHOLD)) // if we've reached low gear or backed off the brake, switch back to regular mode
+        if (brakes_state == PEDAL_STATE::SLAMMED && (pos < LOW_MAX_SETPOINT || brake_pedal.get_value(0) < BRAKE_RESET_THRESHOLD)) // if we've reached low gear or backed off the brake, switch back to regular mode
         {
             brakes_state = PEDAL_STATE::NORMAL;
         }
-
-        last_brake_percent = brake_percent; // update brake percent
 
         float error = setpoint - pos; // calculate the error
 
