@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include "motor.h"
-#include "hall_sensor.h"
 #include "potentiometer.h"
 #include "pins.h"
 #include "pid.h"
 #include "pulseCounter.h"
 #include "pedal_sensors.h"
+#include "wheelSpeed.h"
 
 
 void setup() {
@@ -16,8 +16,7 @@ void setup() {
   //configure whether pins will be sending or receiving data
   setup_motor();
   Serial.println("setup motor finished");
-  setup_hall();
-  Serial.println("setup hall finished");
+  
   setup_potentiometer();
   Serial.println("setup potentiometer finished");
 
@@ -30,14 +29,15 @@ void setup() {
   init_pulse_counter();
   Serial.println("setup hall pulse counter finished");
 
+  init_wheel_speed();
+  Serial.println("setup wheel speed counter finished");
+
   Serial.println("Setup Complete");
 
 }
 
 void loop() {
-
   delay(100);
-
 }
 
 // put function definitions here:

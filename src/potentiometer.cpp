@@ -16,6 +16,5 @@ void setup_potentiometer()
 int read_pos()
 {
     int pot_v = analogRead(POT_PIN); // potentiometer lever
-
     return pot_v;
 }
