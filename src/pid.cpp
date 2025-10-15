@@ -111,9 +111,15 @@ void pid_loop_task(void *pvParameters)
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
         
         // TODO: Should brake slam or manual mode take precedence?
-        if ((brake_pedal.get_change(BRAKE_SLAM_TICKS) > BRAKE_SLAM_CHANGE) && brake_pedal.get_value(0) > BRAKE_SLAM_THRESHOLD) // if we've slammed on the brakes, switch to that mode
+        if (!(brakes_state == PEDAL_STATE::SLAMMED) && // if we're not already slammed
+            (brake_pedal.get_change(BRAKE_SLAM_TICKS) > BRAKE_SLAM_CHANGE) && // and the change has happened fast
+            (brake_pedal.get_value(0) > BRAKE_SLAM_THRESHOLD)) // and we're past the threshold
         {
-            brakes_state = PEDAL_STATE::SLAMMED;
+            brakes_state = PEDAL_STATE::SLAMMED; //.. slam on the brakes
+            
+            #ifdef PEDAL_DEBUG_ACTIVE
+            Serial.printf("BRAKES SLAMMED!\n");
+            #endif
         }
 
         if (brakes_state == PEDAL_STATE::SLAMMED) // slammed brakes means straight to low gear
