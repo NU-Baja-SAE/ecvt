@@ -99,7 +99,7 @@ float get_engine_rpm()
     return rpm;
 }
 
-// calculate engine RPM from primary pulse counter
+// calculate engine RPM from secondary pulse counter
 float get_secondary_rpm()
 {
     // return get_secondary_counter();
