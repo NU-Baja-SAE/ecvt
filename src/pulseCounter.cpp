@@ -35,7 +35,7 @@ void init_pulse_counter()
     pcnt_counter_clear(primary_counter_id);
     pcnt_counter_resume(primary_counter_id);
 
-    // configure counter for primary
+    // configure counter for secondary
     secondary_pcnt_config.unit = secondary_counter_id;
     secondary_pcnt_config.channel = PCNT_CHANNEL_0; // only use channel 0 of each counter unit.
     // Set signal and control inputGPIOs
