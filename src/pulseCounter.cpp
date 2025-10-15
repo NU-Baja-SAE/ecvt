@@ -43,7 +43,7 @@ void init_pulse_counter()
     secondary_pcnt_config.ctrl_gpio_num = PCNT_PIN_NOT_USED;
     pcnt_unit_config(&secondary_pcnt_config);
 
-    // set counting mode for primary counter, count both rising and falling edges
+    // set counting mode for secondary counter, count both rising and falling edges
     esp_err_t err = pcnt_set_mode(secondary_counter_id, PCNT_CHANNEL_0, PCNT_COUNT_INC, PCNT_COUNT_INC, PCNT_MODE_KEEP, PCNT_MODE_KEEP);
     if (err != ESP_OK)
     {
