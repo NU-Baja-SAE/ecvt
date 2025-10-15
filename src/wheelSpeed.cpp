@@ -32,7 +32,7 @@ void init_wheel_speed()
     pcnt_counter_clear(wheel_counter_id);
     pcnt_counter_resume(wheel_counter_id);
     
-    gpio_pullup_en((gpio_num_t)WHEEL_HALL_PIN); // enable pulldown on hall sensor pin to avoid false triggering
+    gpio_pullup_en((gpio_num_t)WHEEL_HALL_PIN); // enable pullup on hall sensor pin to avoid false triggering
 
 }
 
