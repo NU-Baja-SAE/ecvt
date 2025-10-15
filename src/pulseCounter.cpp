@@ -58,7 +58,7 @@ void init_pulse_counter()
     pcnt_counter_clear(secondary_counter_id);
     pcnt_counter_resume(secondary_counter_id);
 
-    gpio_pullup_en((gpio_num_t)SECONDARY_HALL_PIN); // enable pulldown on hall sensor pin to avoid false triggering
+    gpio_pullup_en((gpio_num_t)SECONDARY_HALL_PIN); // enable pullup on hall sensor pin to avoid false triggering
 }
 
 // get the current count of the primary pulse counter
