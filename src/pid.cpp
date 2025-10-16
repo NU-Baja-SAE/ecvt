@@ -8,6 +8,10 @@
 #include "pedal_sensors.h"
 #include "wheelSpeed.h"
 
+// SECTION: Debug Macros
+// Uncomment for full debug
+// #define TELEPLOT_PID_DEBUG 1
+
 // SECTION: Engine RPM Constants
 // #define IDLE_RPM 500
 // #define MAX_RPM 1200
@@ -166,10 +170,12 @@ void pid_loop_task(void *pvParameters)
 
         // Serial.printf("%d, %d, %f, %f\n", (int)rpm, (int)pos, wheel_speed, secondary_rpm);
         //print these so teleplot can read them
-        Serial.printf(">rpm: %d\n", (int)rpm);
-        Serial.printf(">pos: %d\n", (int)pos);
-        Serial.printf(">wheel_speed: %f\n", wheel_speed);
-        Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
+        #ifdef TELEPLOT_PID_DEBUG
+            Serial.printf(">rpm: %d\n", (int)rpm);
+            Serial.printf(">pos: %d\n", (int)pos);
+            Serial.printf(">wheel_speed: %f\n", wheel_speed);
+            Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
+        #endif
 
         static int counter = 0;
         counter++;

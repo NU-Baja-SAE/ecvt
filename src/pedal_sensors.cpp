@@ -17,6 +17,10 @@ void PedalSensor::read_value()
 #endif
 }
 
+void brakeTimerCallback(TimerHandle_t xTimer) {
+    brake_pedal.read_value();
+}
+
 void setup_pedals()
 {
     brake_pedal = PedalSensor{BRAKE_SENSOR_PIN};
@@ -34,15 +38,11 @@ void setup_pedals()
 }
 
 // INVARIANT: idx must be less than BUFFER_SIZE
-float PedalSensor::get_value(uint8_t idx=0) {
+float PedalSensor::get_value(uint8_t idx) {
     return _buffer[(_buffer_idx + idx) % BUFFER_SIZE];
 }
 
 // INVARIANT: ticks must be less than BUFFER_SIZE
 float PedalSensor::get_change(uint8_t ticks) {
     return get_value(ticks) - get_value(0);
-}
-
-void brakeTimerCallback(TimerHandle_t xTimer) {
-    brake_pedal.read_value();
 }
