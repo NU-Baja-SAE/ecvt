@@ -26,7 +26,7 @@
 #define LOW_MAX_SETPOINT 50
 
 //TODO: tune these
-#define BRAKE_SLAM_TICKS 10 // ms, the change must happen in this many ticks
+#define BRAKE_SLAM_TICKS 100 // ms, the change must happen in this many ticks
 #define BRAKE_SLAM_THRESHOLD 0.5 // below this threshold, we never slam
 #define BRAKE_SLAM_CHANGE 0.2 // change that must occur within time
 #define BRAKE_RESET_THRESHOLD 0.4 // value below which the brakes should not be considered slammed anymore, even if we haven't reached low gear
