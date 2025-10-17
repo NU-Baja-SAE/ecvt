@@ -181,10 +181,10 @@ void pid_loop_task(void *pvParameters)
 
         static int counter = 0;
         counter++;
-        if (counter >= 100) // every 100 loops (about every 100 ms)
+        if (counter >= 50) // every 100 loops (about every 100 ms)
         {
             counter = 0;
-            SerialUART1.printf("%d, %d, %d\n", (int)rpm, (int)pos, (int)wheel_speed);
+            SerialUART1.printf("%d, %f, %f, %d, %f\n", (int)rpm, wheel_speed, secondary_rpm, (int)pos, brake_pedal.get_value(0));
         }
         delay(1);
     }
