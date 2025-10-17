@@ -148,19 +148,23 @@ void pid_loop_task(void *pvParameters)
             Serial.printf("Brakes deslammed\n");
         }
 
-        float error = setpoint - pos; // calculate the error
+        if (brakes_state == PEDAL_STATE::NORMAL) {
+            float error = setpoint - pos; // calculate the error
 
-        float derivative = error - last_error; // Derivatice calculation
-        last_error = error;
+            float derivative = error - last_error; // Derivatice calculation
+            last_error = error;
 
-        derivative = moving_average(derivative, filter_array_derivative, 5, &filter_index_derivative);
+            derivative = moving_average(derivative, filter_array_derivative, 5, &filter_index_derivative);
 
-        integral += error; // I controller calculation
-        integral = clamp(integral, -POS_MAX_I_TERM, POS_MAX_I_TERM);
+            integral += error; // I controller calculation
+            integral = clamp(integral, -POS_MAX_I_TERM, POS_MAX_I_TERM);
 
-        result = error * POS_Kp + integral * POS_Ki + derivative * POS_Kd; // PI controller calculation
+            result = error * POS_Kp + integral * POS_Ki + derivative * POS_Kd; // PI controller calculation
 
-        set_direction_speed((int)result); // set the motor speed based on the pid term
+            set_direction_speed((int)result); // set the motor speed based on the pid term
+        } else if (brakes_state == PEDAL_STATE::SLAMMED) {
+            set_direction_speed(-255);
+        }
 
         // Serial.printf(">pos: %d\n", pos);
         // Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
