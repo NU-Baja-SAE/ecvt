@@ -8,9 +8,9 @@
 #include "pedal_sensors.h"
 #include "wheelSpeed.h"
 
-// SECTION: Debug Macros
+// SECTION: Debug Defines
 // Uncomment for full debug
-// #define TELEPLOT_PID_DEBUG 1
+#define TELEPLOT_PID_DEBUG 1
 
 // SECTION: Engine RPM Constants
 // #define IDLE_RPM 500
@@ -115,11 +115,11 @@ void pid_loop_task(void *pvParameters)
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
         
         // TODO: Should brake slam or manual mode take precedence?
-        if (!(brakes_state == PEDAL_STATE::SLAMMED) && // if we're not already slammed
-            (brake_pedal.get_change(BRAKE_SLAM_TICKS) > BRAKE_SLAM_CHANGE) && // and the change has happened fast
+        if ((brakes_state != PEDAL_STATE::SLAMMED) && // if we're not already slammed
+            (brake_pedal.get_change(BRAKE_SLAM_TICKS - 1) > BRAKE_SLAM_CHANGE) && // and the change has happened fast
             (brake_pedal.get_value(0) > BRAKE_SLAM_THRESHOLD)) // and we're past the threshold
         {
-            brakes_state = PEDAL_STATE::SLAMMED; //.. slam on the brakes
+            brakes_state = PEDAL_STATE::SLAMMED; //... slam on the brakes
             
             #ifdef PEDAL_DEBUG_ACTIVE
             Serial.printf("BRAKES SLAMMED!\n");
@@ -141,9 +141,11 @@ void pid_loop_task(void *pvParameters)
 
         int pos = encoder.getCount();
 
+        // TODO: What should the condition for checking the position be?
         if (brakes_state == PEDAL_STATE::SLAMMED && (pos < LOW_MAX_SETPOINT || brake_pedal.get_value(0) < BRAKE_RESET_THRESHOLD)) // if we've reached low gear or backed off the brake, switch back to regular mode
         {
             brakes_state = PEDAL_STATE::NORMAL;
+            Serial.printf("Brakes deslammed\n");
         }
 
         float error = setpoint - pos; // calculate the error
@@ -161,7 +163,6 @@ void pid_loop_task(void *pvParameters)
         set_direction_speed((int)result); // set the motor speed based on the pid term
 
         // Serial.printf(">pos: %d\n", pos);
-        // Serial.printf(">pos_setpoint: %f\n", setpoint);
         // Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
         //                                                                : result);
 
@@ -175,6 +176,7 @@ void pid_loop_task(void *pvParameters)
             Serial.printf(">pos: %d\n", (int)pos);
             Serial.printf(">wheel_speed: %f\n", wheel_speed);
             Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
+            Serial.printf(">pos_setpoint: %f\n", setpoint);
         #endif
 
         static int counter = 0;

@@ -3,7 +3,7 @@
 #include <vector>
 #include "pins.h"
 
-#define PEDAL_DEBUG_ACTIVE // comment this out to disable debug printing
+#define PEDAL_DEBUG_ACTIVE 1 // comment this out to disable debug printing
 
 #define BRAKE_LOW 2600 // maximally depressed value (padded; empirically around 2800)
 #define BRAKE_HIGH 4095 // unpressed value
@@ -36,10 +36,10 @@ protected:
     const char* _name;
     float _value; // this is the RAW potentiometer value
     uint8_t _pin;
-    float _buffer[BUFFER_SIZE] = {0};
+    float _buffer[BUFFER_SIZE] = {0.0};
     uint8_t _buffer_idx = 0;
 };
 
 //TODO: these globals are kind of ugly--alternate implementation?
-static PedalSensor brake_pedal{BRAKE_SENSOR_PIN};
+extern PedalSensor brake_pedal;
 // static PedalSensor gas_pedal{GAS_SENSOR_PIN};

@@ -1,3 +1,5 @@
+#include "FreeRTOSConfig.h"
+
 #define POT_PIN 32 // measures at potentiometer slider
 #define PWM_PIN 13 // SV on driver, sends pulses to the motor 
 #define DIRECTION_PIN 26 // F/R on driver, controls the motor's direction
