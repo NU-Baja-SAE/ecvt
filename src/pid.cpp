@@ -5,7 +5,12 @@
 #include "pid.h"
 #include <ESP32Encoder.h>
 #include "pulseCounter.h"
+#include "pedal_sensors.h"
 #include "wheelSpeed.h"
+
+// SECTION: Debug Defines
+// Uncomment for full debug
+#define TELEPLOT_PID_DEBUG 1
 
 // SECTION: Engine RPM Constants
 // #define IDLE_RPM 500
@@ -13,13 +18,22 @@
 // #define SETPOINT_RPM 800
 #define IDLE_RPM 1900
 #define MAX_RPM 3800
-#define TARGET_RPM 3000
-
+#define OPTIMAL_RPM 3000
 
 #define MAX_SHEAVE_SETPOINT 220 
 #define IDLE_SHEAVE_SETPOINT -90
 #define LOW_SHEAVE_SETPOINT -65
 #define LOW_MAX_SETPOINT 50
+
+//TODO: tune these
+#define BRAKE_SLAM_TICKS 10 // ms, the change must happen in this many ticks
+#define BRAKE_SLAM_THRESHOLD 0.5 // below this threshold, we never slam
+#define BRAKE_SLAM_CHANGE 0.2 // change that must occur within time
+#define BRAKE_RESET_THRESHOLD 0.4 // value below which the brakes should not be considered slammed anymore, even if we haven't reached low gear
+/* since there are a lot of things here, just to clarify: 
+if the brakes change by SLAM_CHANGE within SLAM_TICKS ticks, and the new value
+is below SLAM_THRESHOLD, we stay in slam mode until we reach low gear or the brakes go
+above RESET_THRESHOLD*/
 
 // SECTION: Global Variables
 int _vel_setpoint = 0;
@@ -59,10 +73,6 @@ void setup_pid_task()
 #define ALPHA 0.8
 #define D_ALPHA 0.8
 
-#define clamp(x, min, max) (x < min ? min : x > max ? max \
-                                                    : x)
-#define lerp(a, b, k) (a + (b - a) * k)
-
 float smoothmin(float a, float b, float k)
 {
     float h = clamp(0.5 + 0.5 * (a - b) / k, 0, 1);
@@ -78,7 +88,6 @@ float smoothmax(float a, float b, float k)
 
 void pid_loop_task(void *pvParameters)
 {
-
     float result = 0;
     float integral = 0;
 
@@ -97,20 +106,47 @@ void pid_loop_task(void *pvParameters)
 
     int filter_index_rpm = 0;
 
+    PEDAL_STATE brakes_state = PEDAL_STATE::NORMAL;
+
     while (1)
     {
         float rpm = get_engine_rpm();
         float secondary_rpm = get_secondary_rpm();
         rpm = moving_average(rpm, filter_array_rpm, FILTER_SIZE, &filter_index_rpm);
+        
+        // TODO: Should brake slam or manual mode take precedence?
+        if ((brakes_state != PEDAL_STATE::SLAMMED) && // if we're not already slammed
+            (brake_pedal.get_change(BRAKE_SLAM_TICKS - 1) > BRAKE_SLAM_CHANGE) && // and the change has happened fast
+            (brake_pedal.get_value(0) > BRAKE_SLAM_THRESHOLD)) // and we're past the threshold
+        {
+            brakes_state = PEDAL_STATE::SLAMMED; //... slam on the brakes
+            
+            #ifdef PEDAL_DEBUG_ACTIVE
+            Serial.printf("BRAKES SLAMMED!\n");
+            #endif
+        }
 
+        if (brakes_state == PEDAL_STATE::SLAMMED) // slammed brakes means straight to low gear
+        {
+            setpoint = LOW_SHEAVE_SETPOINT;
+        } 
+        else
+        {
+            // int targetRPM = map(analogRead(36), 0, 4095, 500, 1200);
+            setpoint = calculate_setpoint(rpm, setpoint);
+            // setpoint = map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT);
+            // Serial.printf(">manualSetpoint: %d\n", map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT));
+        }
         float wheel_speed = get_wheel_speed();
 
-        // int targetRPM = map(analogRead(36), 0, 4095, 500, 1200);
-        setpoint = calculate_setpoint(rpm, setpoint);
-        // setpoint = map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT);
-        // Serial.printf(">manualSetpoint: %d\n", map(analogRead(36), 0, 4095, IDLE_SHEAVE_SETPOINT, MAX_SHEAVE_SETPOINT));
-
         int pos = encoder.getCount();
+
+        // TODO: What should the condition for checking the position be?
+        if (brakes_state == PEDAL_STATE::SLAMMED && (pos < LOW_MAX_SETPOINT || brake_pedal.get_value(0) < BRAKE_RESET_THRESHOLD)) // if we've reached low gear or backed off the brake, switch back to regular mode
+        {
+            brakes_state = PEDAL_STATE::NORMAL;
+            Serial.printf("Brakes deslammed\n");
+        }
 
         float error = setpoint - pos; // calculate the error
 
@@ -127,7 +163,6 @@ void pid_loop_task(void *pvParameters)
         set_direction_speed((int)result); // set the motor speed based on the pid term
 
         // Serial.printf(">pos: %d\n", pos);
-        // Serial.printf(">pos_setpoint: %f\n", setpoint);
         // Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
         //                                                                : result);
 
@@ -136,10 +171,13 @@ void pid_loop_task(void *pvParameters)
 
         // Serial.printf("%d, %d, %f, %f\n", (int)rpm, (int)pos, wheel_speed, secondary_rpm);
         //print these so teleplot can read them
-        Serial.printf(">rpm: %d\n", (int)rpm);
-        Serial.printf(">pos: %d\n", (int)pos);
-        Serial.printf(">wheel_speed: %f\n", wheel_speed);
-        Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
+        #ifdef TELEPLOT_PID_DEBUG
+            Serial.printf(">rpm: %d\n", (int)rpm);
+            Serial.printf(">pos: %d\n", (int)pos);
+            Serial.printf(">wheel_speed: %f\n", wheel_speed);
+            Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
+            Serial.printf(">pos_setpoint: %f\n", setpoint);
+        #endif
 
         static int counter = 0;
         counter++;
@@ -166,7 +204,7 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     // }
     else // P controller for RPM setpoint
     {
-        float rpmError = TARGET_RPM - rpm; // positive error means the rpm is too low
+        float rpmError = OPTIMAL_RPM - rpm; // positive error means the rpm is too low
         
         float d_error = last_Error - rpmError; // Derivative error
 

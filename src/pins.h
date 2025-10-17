@@ -1,3 +1,5 @@
+#include "FreeRTOSConfig.h"
+
 #define POT_PIN 32 // measures at potentiometer slider
 #define PWM_PIN 13 // SV on driver, sends pulses to the motor 
 #define DIRECTION_PIN 26 // F/R on driver, controls the motor's direction
@@ -6,6 +8,7 @@
 #define WHEEL_HALL_PIN 4 // wheel speed hall sensor
 #define ENCODER_A 27
 #define ENCODER_B 14
+#define BRAKE_SENSOR_PIN 39
 
 #define DEBUG_RX 16 // UART RX for debugging
 #define DEBUG_TX 17 // UART TX for debugging
@@ -23,3 +26,6 @@
 // #define manualButtonTwo  //starts manual mode 
 // #define buttonPower  // powers buttons for calibration and manual modes
 // #define enablePin; // runs when high or floating 
+
+#define clamp(x, min, max) (x < min ? min : x > max ? max : x)
+#define lerp(a, b, k) (a + (b - a) * k)
