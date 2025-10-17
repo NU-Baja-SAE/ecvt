@@ -53,7 +53,7 @@ float get_wheel_speed()
     u_int64_t currentTime = micros();
     u_int64_t currentCount = get_wheel_pulse_counter();
     float deltaT = (currentTime - lastTime) / 1000000.0;
-    if (deltaT > 0.05)
+    if (deltaT > 0.2)
     {
         uint64_t deltaCount = currentCount - lastCount;
         speed = 60.0 * deltaCount / (deltaT * 4.0); // 4 magnets per revolution
