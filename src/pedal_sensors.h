@@ -10,7 +10,7 @@
 
 #define BRAKE_TIMER_RATE 100 // ms
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 100
 
 void setup_pedals();
 void read_pedals_task(void* pvParameters);
