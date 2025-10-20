@@ -119,11 +119,12 @@ void pid_loop_task(void *pvParameters)
             (brake_pedal.get_change(BRAKE_SLAM_TICKS - 1) > BRAKE_SLAM_CHANGE) && // and the change has happened fast
             (brake_pedal.get_value(0) > BRAKE_SLAM_THRESHOLD)) // and we're past the threshold
         {
-            brakes_state = PEDAL_STATE::SLAMMED; //... slam on the brakes
-            
+            brakes_state = PEDAL_STATE::SLAMMED; // ...slam on the brakes
+
             #ifdef PEDAL_DEBUG_ACTIVE
             Serial.printf("BRAKES SLAMMED!\n");
             #endif
+            SerialUART1.printf("Brakes slammed\n");
         }
 
         if (brakes_state == PEDAL_STATE::SLAMMED) // slammed brakes means straight to low gear
@@ -145,7 +146,11 @@ void pid_loop_task(void *pvParameters)
         if (brakes_state == PEDAL_STATE::SLAMMED && (pos < LOW_MAX_SETPOINT || brake_pedal.get_value(0) < BRAKE_RESET_THRESHOLD)) // if we've reached low gear or backed off the brake, switch back to regular mode
         {
             brakes_state = PEDAL_STATE::NORMAL;
+
+            #ifdef PEDAL_DEBUG_ACTIVE
             Serial.printf("Brakes deslammed\n");
+            #endif
+            SerialUART1.printf("Brakes slammed\n");
         }
 
         if (brakes_state == PEDAL_STATE::NORMAL) {
