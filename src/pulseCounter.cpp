@@ -91,7 +91,7 @@ float get_engine_rpm()
     if (deltaT > 0.05)
     {
         uint64_t deltaCount = currentCount - lastCount;
-        rpm = 60.0 * deltaCount / (deltaT * 6.0); // 6 pulses per revolution
+        rpm = 60.0 * deltaCount / (deltaT * 4.0); // 6 pulses per revolution
 
         lastTime = currentTime;
         lastCount = currentCount;
