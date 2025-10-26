@@ -125,8 +125,9 @@ void pid_loop_task(void *pvParameters)
         Serial.printf(">pos_setpoint: %f\n", setpoint);
         Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
                                                                        : result);
-
+        // Serial.printf(">result: %f\n", result);
         Serial.printf(">rpm: %f\n", rpm);
+
         static int counter = 0;
         counter++;
         if (counter >= 100) // every 100 loops (about every 100 ms)
