@@ -22,21 +22,21 @@ void setup_motor()
 void set_direction_speed(int motor_speed)
 {
 
-  int pos = read_pos();
-  if (pos > POS_MAX) // if the sheave is at the lowest position, don't let it go lower
-  {
-    if (motor_speed > 0)
-    {
-      motor_speed = 0;
-    }
-  }
-  if (pos < POS_MIN) // if the sheave is at the highest position, don't let it go higher
-  {
-    if (motor_speed < 0)
-    {
-      motor_speed = 0;
-    }
-  }
+  // int pos = read_pos();
+  // if (pos > POS_MAX) // if the sheave is at the lowest position, don't let it go lower
+  // {
+  //   if (motor_speed > 0)
+  //   {
+  //     motor_speed = 0;
+  //   }
+  // }
+  // if (pos < POS_MIN) // if the sheave is at the highest position, don't let it go higher
+  // {
+  //   if (motor_speed < 0)
+  //   {
+  //     motor_speed = 0;
+  //   }
+  // }
 
 
   if (motor_speed < 0)

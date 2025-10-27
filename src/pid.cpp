@@ -20,9 +20,9 @@
 #define MAX_RPM 3800
 #define OPTIMAL_RPM 3000
 
-#define MAX_SHEAVE_SETPOINT 220 
+#define MAX_SHEAVE_SETPOINT 300 
 #define IDLE_SHEAVE_SETPOINT -90
-#define LOW_SHEAVE_SETPOINT -65
+#define LOW_SHEAVE_SETPOINT -35
 #define LOW_MAX_SETPOINT 50
 
 //TODO: tune these
@@ -53,7 +53,8 @@ void setup_pid_task()
     encoder.attachHalfQuad(ENCODER_A, ENCODER_B);
 
     int analogValue = analogRead(POT_PIN);
-    int pos = map(analogValue, 0, 4095, -230, 230);
+    // int pos = map(analogValue, 0, 4095, -230, 230);
+    int pos = -90;
     // 3835 = 146
     // 1361 = -176
 
@@ -181,6 +182,8 @@ void pid_loop_task(void *pvParameters)
             Serial.printf(">wheel_speed: %f\n", wheel_speed);
             Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
             Serial.printf(">pos_setpoint: %f\n", setpoint);
+            // Serial.printf(">result: %f\n", clamp(result, -255, 255));
+            Serial.printf(">result: %f\n", result, -255, 255);
         #endif
 
         static int counter = 0;
@@ -188,7 +191,14 @@ void pid_loop_task(void *pvParameters)
         if (counter >= 50) // every 100 loops (about every 100 ms)
         {
             counter = 0;
-            SerialUART1.printf("%d, %f, %f, %d, %f\n", (int)rpm, wheel_speed, secondary_rpm, (int)pos, brake_pedal.get_value(0));
+            SerialUART1.printf("%f, %f, %f, %f, %f, %f, %f\n", 
+                rpm, 
+                wheel_speed, 
+                secondary_rpm, 
+                (float)pos, 
+                setpoint,
+                result,
+                brake_pedal.get_value(0));
         }
         delay(1);
     }
