@@ -8,6 +8,8 @@
 #include "pedal_sensors.h"
 #include "wheelSpeed.h"
 
+#define LOG_HEADER "time_us,engine_rpm,wheel_rpm,secondary_rpm,sheave_position,sheave_setpoint,pwm,brake_position,kp_term,ki_term,kd_term"
+
 // SECTION: Debug Defines
 // Uncomment for full debug
 #define TELEPLOT_PID_DEBUG 1
@@ -39,7 +41,7 @@ above RESET_THRESHOLD*/
 int _vel_setpoint = 0;
 ESP32Encoder encoder;
 
-// setup serial uart on pin 16 and 17
+// setup serial uart
 HardwareSerial SerialUART1(1); // Use UART1 for UART data logging
 
 // SECTION: Function Prototypes
@@ -61,7 +63,9 @@ void setup_pid_task()
     encoder.setCount(pos);
 
 
-    SerialUART1.begin(115200, SERIAL_8N1, DEBUG_RX, DEBUG_TX);
+    // Setup Serial UART for logging
+    SerialUART1.begin(115200, SERIAL_8N1, LOG_RX, LOG_TX);
+    SerialUART1.println(LOG_HEADER);
 
     xTaskCreate(pid_loop_task,   // Function to implement the task
                 "pid_loop_task", // A name just for humans
@@ -71,8 +75,10 @@ void setup_pid_task()
                 NULL);           // Task handle. Not used here
 }
 
+// for exponential smoothing, not currently used
 #define ALPHA 0.8
 #define D_ALPHA 0.8
+
 
 float smoothmin(float a, float b, float k)
 {
@@ -91,6 +97,8 @@ void pid_loop_task(void *pvParameters)
 {
     float result = 0;
     float integral = 0;
+    float error = 0;
+    float derivative = 0;
 
     float setpoint = 0;
     float last_error = 0;
@@ -150,16 +158,16 @@ void pid_loop_task(void *pvParameters)
         }
 
         if (brakes_state == PEDAL_STATE::NORMAL) {
-            float error = setpoint - pos; // calculate the error
+            error = setpoint - pos; // calculate the error
 
-            float derivative = error - last_error; // Derivatice calculation
+            derivative = error - last_error; // Derivatice calculation
             last_error = error;
 
             derivative = moving_average(derivative, filter_array_derivative, 5, &filter_index_derivative);
 
             integral += error; // I controller calculation
-            integral = clamp(integral, -POS_MAX_I_TERM, POS_MAX_I_TERM);
-
+            integral = clamp(integral, 0, POS_MAX_I_TERM);
+            
             result = error * POS_Kp + integral * POS_Ki + derivative * POS_Kd; // PI controller calculation
 
             set_direction_speed((int)result); // set the motor speed based on the pid term
@@ -167,14 +175,6 @@ void pid_loop_task(void *pvParameters)
             set_direction_speed(-255);
         }
 
-        // Serial.printf(">pos: %d\n", pos);
-        // Serial.printf(">PWM: %f\n", result > 255 ? 255 : result < -255 ? -255
-        //                                                                : result);
-
-        // Serial.printf(">rpm: %f\n", rpm);
-        // Serial.printf(">targetRPM: %d\n", targetRPM);
-
-        // Serial.printf("%d, %d, %f, %f\n", (int)rpm, (int)pos, wheel_speed, secondary_rpm);
         //print these so teleplot can read them
         #ifdef TELEPLOT_PID_DEBUG
             Serial.printf(">rpm: %d\n", (int)rpm);
@@ -182,23 +182,26 @@ void pid_loop_task(void *pvParameters)
             Serial.printf(">wheel_speed: %f\n", wheel_speed);
             Serial.printf(">secondary_rpm: %f\n", secondary_rpm);
             Serial.printf(">pos_setpoint: %f\n", setpoint);
-            // Serial.printf(">result: %f\n", clamp(result, -255, 255));
-            Serial.printf(">result: %f\n", result, -255, 255);
+            Serial.printf(">result: %f\n", clamp(result, -255, 255));
         #endif
 
         static int counter = 0;
         counter++;
-        if (counter >= 50) // every 100 loops (about every 100 ms)
+        if (counter >= 20) // every 20 loops
         {
             counter = 0;
-            SerialUART1.printf("%f, %f, %f, %f, %f, %f, %f\n", 
+            SerialUART1.printf("%lld, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", 
+                esp_timer_get_time(),
                 rpm, 
                 wheel_speed, 
                 secondary_rpm, 
                 (float)pos, 
                 setpoint,
                 result,
-                brake_pedal.get_value(0));
+                brake_pedal.get_value(0)),
+                error * POS_Kp,
+                integral * POS_Ki,
+                derivative * POS_Kd;
         }
         delay(1);
     }

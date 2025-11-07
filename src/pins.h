@@ -10,8 +10,8 @@
 #define ENCODER_B 14
 #define BRAKE_SENSOR_PIN 39
 
-#define DEBUG_RX 16 // UART RX for debugging
-#define DEBUG_TX 17 // UART TX for debugging
+#define LOG_RX 16 // UART RX for Logging
+#define LOG_TX 17 // UART TX for Logging
 
 // not used yet, input values as necessary 
 // #define potPinTwo //measures across whole potentiometer resistor
