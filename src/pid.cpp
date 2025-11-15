@@ -158,7 +158,7 @@ void pid_loop_task(void *pvParameters)
         }
 
         if (brakes_state == PEDAL_STATE::NORMAL) {
-            error = setpoint - pos; // calculate the error
+            error = setpoint - (float)pos; // calculate the error
 
             derivative = error - last_error; // Derivatice calculation
             last_error = error;
@@ -168,7 +168,17 @@ void pid_loop_task(void *pvParameters)
             integral += error; // I controller calculation
             integral = clamp(integral, 0, POS_MAX_I_TERM);
             
-            result = error * POS_Kp + integral * POS_Ki + derivative * POS_Kd; // PI controller calculation
+            if (error >=0 ) {
+                result = error * POS_Kp + integral * POS_Ki + derivative * POS_Kd; // PI controller calculation
+            } else { //use different gains for negative error
+                result = error * POS_Kp * Kp_multiplier + integral * POS_Ki + derivative * POS_Kd; // PI controller calculation
+            }
+
+
+            // to prevent changing motor direction unnecessarily
+            if ((result < 0.0) && (result > -15.0)) {
+                result = 1;
+            }
 
             set_direction_speed((int)result); // set the motor speed based on the pid term
         } else if (brakes_state == PEDAL_STATE::SLAMMED) {
@@ -198,10 +208,10 @@ void pid_loop_task(void *pvParameters)
                 (float)pos, 
                 setpoint,
                 result,
-                brake_pedal.get_value(0)),
+                brake_pedal.get_value(0),
                 error * POS_Kp,
                 integral * POS_Ki,
-                derivative * POS_Kd;
+                derivative * POS_Kd);
         }
         delay(1);
     }
