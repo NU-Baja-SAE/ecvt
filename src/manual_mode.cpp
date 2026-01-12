@@ -6,43 +6,38 @@
 #include <ESP32Encoder.h>
 #include "pulseCounter.h"
 
-#define IDLE_RPM 1900
-#define IDLE_SHEAVE_SETPOINT -90
-
-unsigned short pot_position;
-enum MODE_T {
-    POWER_MODE,
-    TORQUE_MODE,
-    POSITION_1,
-    POSITION_2,
-    POSITION_3,
-    POSITION_4
+// Define the differnet possible state of the car with an enum
+enum Mode_T{
+    power_mode,
+    torque_mode,
+    position_one,
+    position_two,
+    position_three,
+    position_four
 };
-// Mode read will read the value from the mode control and update the mode as well as update the target 
-// TODO: should this function return a void, or be void and update the global state?
+
+// A function that reads the manual mode dial and assignes an state based on the dial posiont
 void mode_read()
 {
-    // 
-    // read the potentiometer 
-    pot_position = 1;
-    //____UNcommment this in the future_____
-
-    //pot_position = analogRead(MODE_PIN)    
-
-    // Set enum mode variable to be the mode associated with the pot position
-    //
-    if (0 < pot_position < 8192)
-        MODE_T::POWER_MODE;
-    else if (8192 < pot_position < 16384)
-        MODE_T::TORQUE_MODE;
-    else if (8192 < pot_position < 24576)
-        MODE_T::POSITION_1;
-    else if (24576 < pot_position < 32768)
-        MODE_T::POSITION_2;
-    else if (32768 < pot_position < 40960)
-        MODE_T::POSITION_3;
-    else if (pot_position > 40960)
-        MODE_T::POSITION_4;  
+    int dial_position = analogRead(POT_PIN); // read the mode the car is in 
+    if (10892 > dial_position > 21785) {
+        enum Mode_T car_mode = power_mode;
+    }
+    else if (21758 < dial_position < 32677)
+    {
+        enum Mode_T car_mode = torque_mode;
+    }
+    else if (32677 < dial_position < 43569)
+    {
+        enum Mode_T car_mode = position_one;
+    }
+    else if (43569 < dial_position < 54461) {
+        enum Mode_T car_mode = position_two;
+    }
+    else if (54461 < dial_position < 65355) {
+        enum Mode_T car_mode = position_three;
+    }
+    else if (0 < dial_position < 10892) {
+        enum Mode_T car_mode = position_four;
+    }
 }
-
-
