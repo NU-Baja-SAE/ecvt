@@ -14,6 +14,9 @@
 #define DEBUG_TX 17 // UART TX for debugging
 
 // not used yet, input values as necessary 
+
+//#define MODE_PIN (SOME Number).    //Manual Mode Potentiometer
+
 // #define potPinTwo //measures across whole potentiometer resistor
 // #define potPowerPin  //powers potentiometer
 // #define brake_pin  //starts and stops the motor
