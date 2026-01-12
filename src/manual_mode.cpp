@@ -6,55 +6,38 @@
 #include <ESP32Encoder.h>
 #include "pulseCounter.h"
 
-#define IDLE_RPM 1900
-#define IDLE_SHEAVE_SETPOINT -90
+// Define the differnet possible state of the car with an enum
+enum Mode_T{
+    power_mode,
+    torque_mode,
+    position_one,
+    position_two,
+    position_three,
+    position_four
+};
 
-int mode;
-bool manual_mode; // this boolean will be refrenced in PID file when swutching between manual controll
-int target_setpoint;  // the setpoints for the sheaves in manula mode
-float setpoint_error; // the error between the target setpoint and the current 
-float motor_speed; // the value to set the motor speed based on the setpoint 
-
-// Mode read will read the value from the mode control and update the mode as well as update the target 
-// TODO: should this function return a bool, or be void and update the global state?
-bool mode_read()
+// A function that reads the manual mode dial and assignes an state based on the dial posiont
+void mode_read()
 {
-    // 
-    // read the mode value
-    // Set mode variable to be the value of the dial
-    //
-    if (mode <= 3) {
-        manual_mode = true;  
-        target_setpoint = 1000; // use math to relate mode read value and target setpoints of branch statements 
+    int dial_position = analogRead(POT_PIN); // read the mode the car is in 
+    if (10892 > dial_position > 21785) {
+        enum Mode_T car_mode = power_mode;
     }
-    else {
-        manual_mode = false;  // Update the value of the boole
-    }
-}
-
-//Will run manual control task loop instead of PID loop task when in manual control mode 
-void move_to_teraget_setpoint()
-{
-    int pos = read_pos(); // position of the sheaves
-    if (get_engine_rpm() < IDLE_RPM) // if the rpm is less than the idle rpm
+    else if (21758 < dial_position < 32677)
     {
-        setpoint_error = IDLE_SHEAVE_SETPOINT - pos;
-        motor_speed = setpoint_error * 1234;  // calculate the motor speed to move the sheaves  
-        set_direction_speed((int)motor_speed);
+        enum Mode_T car_mode = torque_mode;
     }
-    else {
-        setpoint_error = target_setpoint - pos;
-        motor_speed = setpoint_error * 1234;  // calculate the motor speed to move the sheaves  
-        set_direction_speed((int)motor_speed);
+    else if (32677 < dial_position < 43569)
+    {
+        enum Mode_T car_mode = position_one;
     }
-}
-
-// PID loop will call get mode rpm instead of target rpm when runnning 
-int get_mode_rpm() {
-    if (mode == 0) {             // if the engine is in power mode return 3000
-        return 3000;
+    else if (43569 < dial_position < 54461) {
+        enum Mode_T car_mode = position_two;
     }
-    else {            // else returnn 2400
-        return 2400;
+    else if (54461 < dial_position < 65355) {
+        enum Mode_T car_mode = position_three;
+    }
+    else if (0 < dial_position < 10892) {
+        enum Mode_T car_mode = position_four;
     }
 }
