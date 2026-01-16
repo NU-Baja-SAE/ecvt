@@ -11,7 +11,7 @@
 #define BRAKE_SENSOR_PIN 39
 
 #define LIMIT_SWITCH_PIN 25
-#define MANUAL_MODE_PIN 34
+#define MANUAL_MODE_PIN 35
 
 #define LOG_RX 16 // UART RX for Logging
 #define LOG_TX 17 // UART TX for Logging

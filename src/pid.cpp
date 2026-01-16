@@ -40,7 +40,7 @@ above RESET_THRESHOLD*/
 // SECTION: Global Variables
 int _vel_setpoint = 0;
 ESP32Encoder encoder;
-int optimal_rpm;
+
 // setup serial uart
 HardwareSerial SerialUART1(1); // Use UART1 for UART data logging
 
@@ -236,6 +236,7 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     if (rpm < IDLE_RPM) // if the rpm is less than the idle rpm
     {
         return IDLE_SHEAVE_SETPOINT;
+
     }
     // else if (rpm > MAX_RPM) // if the rpm is greater than the max rpm
     // {
@@ -243,11 +244,14 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     // }
     else // P controller for RPM setpoint
     {
-        mode_read();
-        if (car_mode == torque_mode) {
+        
+        Mode_T car_mode = mode_read();
+        int optimal_rpm = 3000;
+        
+        if (car_mode == TORQUE_MODE) {
             optimal_rpm = 2400;
         }
-        else if (car_mode == power_mode) {
+        else if (car_mode == POWER_MODE) {
             optimal_rpm = 3000;
         }
         float rpmError = optimal_rpm - rpm; // positive error means the rpm is too low

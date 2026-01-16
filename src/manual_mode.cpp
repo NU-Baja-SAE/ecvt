@@ -8,25 +8,15 @@
 #include "manual_mode.h"
 
 
-// A function that reads the manual mode dial and assignes a state based on the dial posiont
-void mode_read() {
-    int dial_position = analogRead(POT_PIN); // read the mode the car is in 
-    if (10892 > dial_position > 21785) {
-        car_mode = power_mode;
+// A function that reads the manual mode dial and assigns a state based on the dial position
+Mode_T mode_read() {
+    int dial_position = digitalRead(MANUAL_MODE_PIN); // read the mode the car is in 
+    if (dial_position == LOW) {
+        return POWER_MODE;
     }
-    else if (21758 < dial_position < 32677){
-        car_mode = torque_mode;
+    else if (dial_position == HIGH){
+        return TORQUE_MODE;
     }
-    else if (32677 < dial_position < 43569){
-        car_mode = position_one;
-    }
-    else if (43569 < dial_position < 54461) {
-        car_mode = position_two;
-    }
-    else if (54461 < dial_position < 65355) {
-        car_mode = position_three;
-    }
-    else if (0 < dial_position < 10892) {
-        car_mode = position_four;
-    }
+    return POWER_MODE; //Should not reach here
+
 }
