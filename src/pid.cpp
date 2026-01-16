@@ -185,7 +185,7 @@ void pid_loop_task(void *pvParameters)
             {
                 result = 1;
             }
-            if ((result <= 0.0) && (result > 7.5))
+            if ((result <= 0.0) && (result > -7.5))
             { // never go below 7.5 in the negative direction
                 result = 1;
             }
