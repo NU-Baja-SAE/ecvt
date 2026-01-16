@@ -10,6 +10,7 @@ void setup_motor()
 {
   // setup direction pin
   pinMode(DIRECTION_PIN, OUTPUT);
+  pinMode(LIMIT_SWITCH_PIN, INPUT_PULLUP);
 
   // Seting up PWM
   ledcSetup(LEDC_CHANNEL, 1500, 8);
@@ -22,22 +23,11 @@ void setup_motor()
 void set_direction_speed(int motor_speed)
 {
 
-  int pos = read_pos();
-  if (pos > POS_MAX) // if the sheave is at the lowest position, don't let it go lower
+  // check if limit switch is pressed when trying to move further back
+  if ((digitalRead(LIMIT_SWITCH_PIN) == LOW) && (motor_speed < 0))
   {
-    if (motor_speed > 0)
-    {
-      motor_speed = 0;
-    }
+    motor_speed = 0; // stop the motor
   }
-  if (pos < POS_MIN) // if the sheave is at the highest position, don't let it go higher
-  {
-    if (motor_speed < 0)
-    {
-      motor_speed = 0;
-    }
-  }
-
 
   if (motor_speed < 0)
   {
