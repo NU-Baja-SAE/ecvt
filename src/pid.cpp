@@ -316,7 +316,7 @@ void home_motor()
     delay(1000);
     setpoint = encoder.getCount() + 25;
     integral = 0;
-    // move backwards until we hit the limit switch
+    // move forward under PID control to an offset position away from the limit switch
     while (setpoint > encoder.getCount() - 5) // add a small deadzone
     {
         int error = setpoint - encoder.getCount();
