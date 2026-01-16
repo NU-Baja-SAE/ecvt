@@ -297,8 +297,8 @@ void home_motor()
         integral += error;
         integral = clamp(integral, 0, POS_MAX_I_TERM);
         int result = error * POS_Kp + integral * POS_Ki;
-        set_direction_speed(result);
         result = clamp(result, -50, 50); // limit speed
+        set_direction_speed(result);
         Serial.printf("Homing... pos: %d, setpoint: %d, error: %d, result: %d\n", encoder.getCount(), setpoint, error, result);
         delay(50);
 
@@ -324,8 +324,8 @@ void home_motor()
         integral = clamp(integral, 0, POS_MAX_I_TERM);
 
         int result = error * POS_Kp + integral * POS_Ki;
-        set_direction_speed(result);
         result = clamp(result, -50, 50); // limit speed
+        set_direction_speed(result);
         Serial.printf("Homing... pos: %d, setpoint: %d, error: %d, result: %d\n", encoder.getCount(), setpoint, error, result);
 
         delay(50);
