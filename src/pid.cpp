@@ -236,6 +236,7 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     if (rpm < IDLE_RPM) // if the rpm is less than the idle rpm
     {
         return IDLE_SHEAVE_SETPOINT;
+
     }
     // else if (rpm > MAX_RPM) // if the rpm is greater than the max rpm
     // {
@@ -243,7 +244,7 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     // }
     else // P controller for RPM setpoint
     {
-        mode_read();
+        Mode_T car_mode = mode_read();
         if (car_mode == TORQUE_MODE) {
             optimal_rpm = 2400;
         }
