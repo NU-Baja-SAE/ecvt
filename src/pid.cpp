@@ -9,6 +9,7 @@
 #include "wheelSpeed.h"
 
 #define LOG_HEADER "time_us,engine_rpm,wheel_rpm,secondary_rpm,sheave_position,sheave_setpoint,pwm,brake_position,kp_term,ki_term,kd_term"
+#include "manual_mode.h"
 
 // SECTION: Debug Defines
 // Uncomment for full debug
@@ -20,7 +21,6 @@
 // #define SETPOINT_RPM 800
 #define IDLE_RPM 1900
 #define MAX_RPM 3800
-#define OPTIMAL_RPM 3000
 
 #define MAX_SHEAVE_SETPOINT 300
 #define IDLE_SHEAVE_SETPOINT -90
@@ -40,7 +40,7 @@ above RESET_THRESHOLD*/
 // SECTION: Global Variables
 int _vel_setpoint = 0;
 ESP32Encoder encoder;
-
+int optimal_rpm;
 // setup serial uart
 HardwareSerial SerialUART1(1); // Use UART1 for UART data logging
 
@@ -243,7 +243,14 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     // }
     else // P controller for RPM setpoint
     {
-        float rpmError = OPTIMAL_RPM - rpm; // positive error means the rpm is too low
+        mode_read();
+        if (car_mode == torque_mode) {
+            optimal_rpm = 2400;
+        }
+        else if (car_mode == power_mode) {
+            optimal_rpm = 3000;
+        }
+        float rpmError = optimal_rpm - rpm; // positive error means the rpm is too low
 
         float d_error = last_Error - rpmError; // Derivative error
 
