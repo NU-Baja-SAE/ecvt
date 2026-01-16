@@ -1,10 +1,5 @@
 void mode_read();
 enum Mode_T{
-    power_mode,
-    torque_mode,
-    position_one,
-    position_two,
-    position_three,
-    position_four
+    POWER_MODE, TORQUE_MODE
 };
 enum Mode_T car_mode;

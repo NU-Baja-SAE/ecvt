@@ -244,10 +244,10 @@ float calculate_setpoint(float rpm, float sheave_setpoint)
     else // P controller for RPM setpoint
     {
         mode_read();
-        if (car_mode == torque_mode) {
+        if (car_mode == TORQUE_MODE) {
             optimal_rpm = 2400;
         }
-        else if (car_mode == power_mode) {
+        else if (car_mode == POWER_MODE) {
             optimal_rpm = 3000;
         }
         float rpmError = optimal_rpm - rpm; // positive error means the rpm is too low
