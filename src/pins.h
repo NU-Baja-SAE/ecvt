@@ -10,22 +10,12 @@
 #define ENCODER_B 14
 #define BRAKE_SENSOR_PIN 39
 
+#define LIMIT_SWITCH_PIN 25
+#define MANUAL_MODE_PIN 34
+
 #define LOG_RX 16 // UART RX for Logging
 #define LOG_TX 17 // UART TX for Logging
 
-// not used yet, input values as necessary 
-// #define potPinTwo //measures across whole potentiometer resistor
-// #define potPowerPin  //powers potentiometer
-// #define brake_pin  //starts and stops the motor
-// #define calibration_button  // starts calibration sequence
-// #define limit_switch_one  //measures one of the maximum sheave travel positions
-// #define limit_switch_one_power  //powers limit switch 1
-// #define limit_switch_two  //measures the other maximum sheave travel position 
-// #define limit_switch_two_power  //powers limit switch 2
-// #define manualButtonOne  //starts manual mode 
-// #define manualButtonTwo  //starts manual mode 
-// #define buttonPower  // powers buttons for calibration and manual modes
-// #define enablePin; // runs when high or floating 
 
 #define clamp(x, min, max) (x < min ? min : x > max ? max : x)
 #define lerp(a, b, k) (a + (b - a) * k)

@@ -11,6 +11,8 @@
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+
+  pinMode(MANUAL_MODE_PIN, INPUT_PULLUP);
   
 
   //configure whether pins will be sending or receiving data
@@ -37,6 +39,10 @@ void setup() {
 }
 
 void loop() {
+  // Serial.print("Manual mode pin state: ");
+  // Serial.println(digitalRead(MANUAL_MODE_PIN));
+  // Serial.println("Limit switch state: ");
+  // Serial.println(digitalRead(LIMIT_SWITCH_PIN));
   delay(100);
 }
 
