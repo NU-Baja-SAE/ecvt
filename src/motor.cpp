@@ -27,23 +27,28 @@ void set_direction_speed(int motor_speed)
   if ((digitalRead(LIMIT_SWITCH_PIN) == LOW) && (motor_speed < 0))
   {
     motor_speed = 0; // stop the motor
+    Serial.println("edge case entered\n");
   }
 
   if (motor_speed < 0)
   {
     digitalWrite(DIRECTION_PIN, LOW);
     motor_speed = -motor_speed;
+    Serial.println("speed: %d, dir: neg\n", motor_speed);
   }
   else
   {
     digitalWrite(DIRECTION_PIN, HIGH);
+    Serial.println("speed: %d, dir: pos\n", motor_speed);
   }
 
   if (motor_speed > 255)
   {
     motor_speed = 255;
+    Serial.println("speed clamped\n");
   }
 
 
   ledcWrite(LEDC_CHANNEL, motor_speed);
+  Serial.println("motor spinning at speed %d\n", motor_speed);
 }

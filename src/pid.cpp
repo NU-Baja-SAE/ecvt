@@ -297,13 +297,14 @@ void home_motor()
     int pos = encoder.getCount();
     int setpoint = pos;
     int integral = 0;
-
+    Serial.println("initial pos: %d\n", pos);
     int time = millis();
 
     // move backwards until we hit the limit switch
     while (digitalRead(LIMIT_SWITCH_PIN) == HIGH)
     {
         setpoint -= 1;
+        Serial.println("setpoint pos: %d\n", setpoint);
         int error = setpoint - encoder.getCount();
         integral += error;
         integral = clamp(integral, 0, POS_MAX_I_TERM);
