@@ -45,21 +45,53 @@ int get_wheel_pulse_counter()
 
 float get_wheel_speed()
 {
-    static u_int64_t lastTime = micros();
-    static u_int64_t lastCount = get_wheel_pulse_counter();
+    const int BUFFER_SIZE = 5;
+    static u_int64_t timeBuffer[BUFFER_SIZE] = {0};
+    static u_int64_t countBuffer[BUFFER_SIZE] = {0};
+    static int bufferIndex = 0;
+    static bool bufferFilled = false;
     static float speed = 0;
+    static u_int64_t lastUpdateTime = 0;
 
-    // Wheel speed calculation
+    // Get current measurements
     u_int64_t currentTime = micros();
     u_int64_t currentCount = get_wheel_pulse_counter();
-    float deltaT = (currentTime - lastTime) / 1000000.0;
-    if (deltaT > 0.2)
-    {
-        uint64_t deltaCount = currentCount - lastCount;
-        speed = 60.0 * deltaCount / (deltaT * 4.0); // 4 magnets per revolution
 
-        lastTime = currentTime;
-        lastCount = currentCount;
+    // Only update buffer every 100ms
+    if ((currentTime - lastUpdateTime) < 100000) // 100ms in microseconds
+    {
+        return speed;
     }
+
+    lastUpdateTime = currentTime;
+
+    // Store current measurement in circular buffer
+    timeBuffer[bufferIndex] = currentTime;
+    countBuffer[bufferIndex] = currentCount;
+
+    // Calculate the index of the oldest measurement
+    int oldestIndex = (bufferIndex + 1) % BUFFER_SIZE;
+
+    // Mark buffer as filled once we've wrapped around
+    if (bufferIndex == BUFFER_SIZE - 1 && !bufferFilled)
+    {
+        bufferFilled = true;
+    }
+
+    // Update buffer index for next call
+    bufferIndex = (bufferIndex + 1) % BUFFER_SIZE;
+
+    // Only calculate speed once we have enough samples
+    if (bufferFilled)
+    {
+        u_int64_t oldestTime = timeBuffer[oldestIndex];
+        u_int64_t oldestCount = countBuffer[oldestIndex];
+
+        float deltaT = (currentTime - oldestTime) / 1000000.0;
+        uint64_t deltaCount = currentCount - oldestCount;
+
+        speed = 60.0 * deltaCount / (deltaT * 4.0); // 4 magnets per revolution
+    }
+
     return speed;
 }
